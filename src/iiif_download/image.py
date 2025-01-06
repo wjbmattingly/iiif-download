@@ -41,6 +41,7 @@ class IIIFImage:
         self.allow_truncation = config.allow_truncation
         self.sleep = config.get_sleep_time(self.url)
 
+    @property
     def img_path(self) -> Path:
         return self.save_dir / self.img_name
 

@@ -91,9 +91,12 @@ class IIIFManifest:
 
         return None
 
+    # TODO add a property metadata with every metadata provided
+
     @property
     def license(self) -> str:
         """Get license information from manifest."""
+        # TODO save licence once retrieved
         if not self.content:
             return "No manifest loaded"
 
@@ -143,8 +146,11 @@ class IIIFManifest:
 
         return resources
 
+    # TODO add property canvas
+
     def get_images(self) -> List[IIIFImage]:
         """Get all images from manifest."""
+        # TODO create property and setter
         images = []
         for i, resource in enumerate(self.get_resources()):
             images.append(

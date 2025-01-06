@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="iiif-download",
-    version="0.1.5",
+    version="0.1.6",
     author="Segolene-Albouy",
     author_email="segolene.albouy@gmail.com",
     description="A Python package to download images from IIIF manifests",
