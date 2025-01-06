@@ -130,7 +130,7 @@ class TestManifest:
         manifest = IIIFManifest(self.manifest_url, img_dir="images", save_dir="manifests")
         assert str(manifest.save_dir) == str(tmp_base_dir / "images" / "manifests")
 
-        abs_path = "/private/tmp/abs/path"
+        abs_path = str(tmp_base_dir / "abs" / "path")
         # definition of absolute path to img_dir
         manifest = IIIFManifest(self.manifest_url, img_dir=abs_path)
         assert str(manifest.save_dir) == abs_path
