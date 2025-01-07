@@ -9,7 +9,7 @@ import copy
 import os
 from asyncio import Semaphore
 from pathlib import Path
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 
 class Config:
@@ -31,12 +31,14 @@ class Config:
         self._retry_attempts = 3
         self._sleep_time = {"default": 0.05, "gallica": 12}
         self._semaphore = Semaphore(5)
+        self._timeout = 120  # 2 minutes
+        self._user_agent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0"
+        self._proxy_settings = {}
 
         # Dev settings
         self._debug = False
         self._is_logged = True
         self._save_manifest = False
-        self._user_agent = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0"
 
         for key, value in kwargs.items():
             # override any config attribute
@@ -82,6 +84,12 @@ class Config:
 
         if save := os.getenv("IIIF_SAVE_MANIFEST"):
             self._save_manifest = save.lower() in ("true", "1", "yes")
+
+        if http_proxy := os.environ.get("http_proxy") or os.environ.get("HTTP_PROXY"):
+            self._proxy_settings["http"] = http_proxy
+
+        if https_proxy := os.environ.get("https_proxy") or os.environ.get("HTTPS_PROXY"):
+            self._proxy_settings["https"] = https_proxy
 
         # TODO add is_logged, semaphore, user_agent, save_manifest
 
@@ -267,6 +275,26 @@ class Config:
         if not isinstance(value, bool):
             raise TypeError("Allow truncation must be a boolean")
         self._allow_truncation = value
+
+    @property
+    def proxy_settings(self) -> Dict[str, Optional[str]]:
+        return self._proxy_settings.copy()
+
+    @proxy_settings.setter
+    def proxy_settings(self, settings: Dict[str, str]):
+        if not isinstance(settings, dict):
+            raise TypeError("Proxy settings must be a dictionary")
+        self._proxy_settings = settings
+
+    @property
+    def timeout(self) -> int:
+        return self._timeout
+
+    @timeout.setter
+    def timeout(self, value: int):
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError("Timeout must be a positive integer")
+        self._timeout = value
 
     def copy(self):
         return copy.copy(self)

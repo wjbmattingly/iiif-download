@@ -1,4 +1,6 @@
 import os
+from unittest.mock import patch
+
 import pytest
 from pathlib import Path
 from ..config import Config
@@ -116,6 +118,39 @@ def test_config_directory_creation():
 
     shutil.rmtree(test_base)
     del os.environ["IIIF_BASE_DIR"]
+
+
+def test_proxy_settings():
+    """Test proxy configuration."""
+    config = Config()
+
+    # Test empty proxy settings by default
+    assert isinstance(config.proxy_settings, dict)
+    assert config.proxy_settings == {}
+
+    # Test setting environment variables
+    with patch.dict(
+        "os.environ", {"http_proxy": "http://proxy.test:8080", "https_proxy": "https://proxy.test:8080"}
+    ):
+        config = Config()
+        assert config.proxy_settings == {"http": "http://proxy.test:8080", "https": "https://proxy.test:8080"}
+
+    # Test with single proxy
+    with patch.dict("os.environ", {"http_proxy": "http://proxy.test:8080"}):
+        config = Config()
+        assert config.proxy_settings == {"http": "http://proxy.test:8080"}
+
+
+def test_network_settings():
+    """Test network-related settings."""
+    config = Config()
+
+    # Test timeout
+    assert config.timeout > 0
+    config.timeout = 600
+    assert config.timeout == 600
+    with pytest.raises(ValueError):
+        config.timeout = -1
 
 
 # TODO test config copy

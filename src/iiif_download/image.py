@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import aiohttp
+from aiohttp import ClientError, ClientSession, ClientSSLError, ClientTimeout
 from PIL import Image as PILgrimage
 
 from .config import config
@@ -66,23 +66,34 @@ class IIIFImage:
                 self.size = self.get_max_size()
                 return await self.download()
         except Exception as e:
-            logger.error(f"Failed to process image {self.sized_url}", e)
+            logger.error(f"Failed to process image {self.sized_url()}", e)
             return False
 
     async def download(self) -> bool:
+        """Download and save the image using configured settings."""
         url = self.sized_url()
         time.sleep(self.sleep)
-        async with aiohttp.ClientSession() as session:
-            session.headers.update(
-                {
-                    "User-Agent": config.user_agent,
-                }
-            )
-            async with session.get(url) as response:
-                if not response.ok:
-                    logger.error(f"Failed to download {url}: {response.status}")
-                    return False
-                return await self.process_response(response)
+
+        async with ClientSession(
+            trust_env=True,
+            timeout=ClientTimeout(total=config.timeout),
+        ) as session:
+            session.headers.update({"User-Agent": config.user_agent})
+
+            try:
+                async with session.get(url, proxy=config.proxy_settings or None) as response:
+                    if not response.ok:
+                        logger.error(f"Failed to download {url}: {response.status}")
+                        return False
+                    return await self.process_response(response)
+
+            except ClientSSLError as e:
+                logger.error(f"SSL Error for {url}: Please check your proxy SSL certificates", e)
+                return False
+
+            except ClientError as e:
+                logger.error(f"Connection error for {url}", e)
+                return False
 
     async def process_response(self, response) -> bool:
         """Process and save the image response using chunked downloading."""
