@@ -77,17 +77,26 @@ class TestManifest:
         manifest.content = manifest_content
         assert expected_license in manifest.license
 
-    def MockManifest(self, images: List[IIIFImage] = [], **kwargs):
-        """Create a mock IIIFManifest instance."""
-        mock_manifest = Mock(spec=IIIFManifest)
-        mock_manifest.url = "https://creativecommons.org/licenses/by/4.0/"
-        mock_manifest.load.return_value = True
-        mock_manifest.get_images.return_value = images
+    # def MockManifest(self, images: List[IIIFImage] = [], **kwargs):
+    #     """Create a mock IIIFManifest instance."""
+    #     mock_manifest = Mock(spec=IIIFManifest)
+    #     mock_manifest.url = "https://creativecommons.org/licenses/by/4.0/"
+    #     mock_manifest.load.return_value = True
+    #     mock_manifest.get_images.return_value = images
+    #
+    #     for k, v in kwargs.items():
+    #         setattr(mock_manifest, k, v)
+    #
+    #     return mock_manifest
 
-        for k, v in kwargs.items():
-            setattr(mock_manifest, k, v)
+    @pytest.mark.asyncio
+    async def test_manifest_load(self, mock_manifest):
+        manifest = mock_manifest("manifest_v2.json")
+        assert await manifest.load() is True
 
-        return mock_manifest
+        # Test avec une URL invalide
+        bad_manifest = IIIFManifest("https://invalid.url")
+        assert await bad_manifest.load() is False
 
     def test_info_file(self, tmp_base_dir, mock_manifest, manifest_files):
         """Test that the downloader appends metadata to info.json."""

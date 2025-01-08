@@ -30,7 +30,11 @@ def mock_manifest():
             manifest_content = json.load(f)
         manifest = IIIFManifest("https://example.org/manifest")
         manifest.content = manifest_content
-        manifest.load = lambda: manifest_content
+
+        async def mock_load(*args, **kwargs):
+            return True
+
+        manifest.load = mock_load
         return manifest
 
     return _create_mock

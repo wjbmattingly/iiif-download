@@ -1,12 +1,14 @@
-import json
 import re
+from contextlib import asynccontextmanager
 from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import aiofiles
-import requests
+from aiohttp import ClientResponse, ClientSession, ClientSSLError, ClientTimeout
+
+from ..config import config
 
 
 def check_dir(path):
@@ -35,19 +37,65 @@ def sanitize_str(string):
     return string.replace("/", "").replace(".", "").replace("https:", "").replace("www", "").replace(" ", "_")
 
 
-def get_json(url):
-    try:
-        r = requests.get(url)
-    except requests.exceptions.SSLError:
-        requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += "HIGH:!DH:!aNULL"
-        try:
-            requests.packages.urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST += "HIGH:!DH:!aNULL"
-        except AttributeError:
-            # no pyopenssl support used / needed / available
-            pass
-        r = requests.get(url, verify=False)
+async def get_json_async(url: str, allow_insecure: bool = False) -> Dict[str, Any]:
+    """
+    Args:
+        url: The URL to fetch JSON from
+        allow_insecure: If True, allows fallback to insecure connection on SSL errors
 
-    return json.loads(r.text)
+    Returns: Parsed JSON content
+    """
+    try:
+        async with async_request(url) as response:
+            return await response.json()
+    except ClientSSLError as ssl_error:
+        if not allow_insecure:
+            raise ssl_error
+        # Fallback to insecure connection
+        async with async_request(
+            url,
+            ssl=False,
+        ) as response:
+            return await response.json()
+
+
+@asynccontextmanager
+async def async_request(
+    url: str,
+    method: str = "GET",
+    headers: Optional[Dict[str, str]] = None,
+    timeout: Optional[int] = None,
+    **kwargs,
+) -> ClientResponse:
+    """
+    Async context manager for making HTTP requests with proper proxy and error handling.
+
+    Args:
+        url: The URL to request
+        method: HTTP method (default: "GET")
+        headers: Optional dictionary of headers
+        timeout: Optional timeout in seconds (default: from config)
+        **kwargs: Additional arguments to pass to session.request
+
+    Usage:
+        async with async_request("https://example.com") as response:
+            if response.ok:
+                data = await response.read()
+    """
+    proxy = (
+        config.proxy_settings.get("https" if url.startswith("https") else "http")
+        if config.proxy_settings
+        else None
+    )
+
+    request_headers = {"User-Agent": config.user_agent}
+    if headers:
+        request_headers.update(headers)
+
+    timeout_value = timeout or config.timeout
+    async with ClientSession(trust_env=True, timeout=ClientTimeout(total=timeout_value)) as session:
+        async with session.request(method, url, headers=request_headers, proxy=proxy, **kwargs) as response:
+            yield response
 
 
 def get_id(dic):

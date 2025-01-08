@@ -1,4 +1,5 @@
 import asyncio
+import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import unquote
@@ -8,7 +9,7 @@ from .image import IIIFImage
 from .utils import (
     create_dir,
     get_id,
-    get_json,
+    get_json_async,
     get_license_url,
     get_meta_value,
     mono_val,
@@ -62,16 +63,16 @@ class IIIFManifest:
         """Generate a directory name from manifest URL."""
         return sanitize_str(self.url).replace("manifest", "").replace("json", "")
 
-    def load(self, reload=False) -> bool:
+    async def load(self, reload=False) -> bool:
         """Load manifest content from URL."""
         if bool(self.content) and not reload:
             return True
 
         try:
-            self.content = get_json(self.url)
+            self.content = await get_json_async(self.url, allow_insecure=True)
             if self.config.save_manifest:
                 with open(self.save_dir / "manifest.json", "w") as f:
-                    f.write(str(self.content))
+                    json.dump(self.content, f)
             return bool(self.content)
         except Exception as e:
             logger.error(f"Failed to load manifest from {self.url}", exception=e)
@@ -156,7 +157,7 @@ class IIIFManifest:
             images.append(
                 IIIFImage(
                     idx=i + 1,
-                    img_id=get_id(resource["service"]),
+                    img_id=get_id(resource["service"] if "service" in resource else resource),
                     resource=resource,
                     save_dir=self.save_dir,
                 )
@@ -185,7 +186,7 @@ class IIIFManifest:
             if self.config.is_logged:
                 self._manifest_info = {"url": self.url, "license": "", "images": {}}
 
-            if not self.load():
+            if not await self.load():
                 logger.warning(f"Unable to load json content of {self.url}")
                 self.save_log()
                 return self

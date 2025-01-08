@@ -140,7 +140,7 @@ class Logger:
         if self.compact:
             return f"\n{emoji} {timestamp}{color}{formatted}{self.COLORS['end']}"
 
-        return f"\n\n\n{emoji} {timestamp}\n{color}{formatted}{self.COLORS['end']}\n\n\n"
+        return f"\n\n{emoji} {timestamp}\n{color}{formatted}{self.COLORS['end']}\n\n"
 
     @staticmethod
     def format_exception(exception: Exception) -> str:

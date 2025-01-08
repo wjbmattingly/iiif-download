@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="iiif-download",
-    version="0.1.7",
+    version="0.1.8",
     author="Segolene-Albouy",
     author_email="segolene.albouy@gmail.com",
     description="A Python package to download images from IIIF manifests",
@@ -44,7 +44,13 @@ setup(
         "aiofiles>=24.1.0",
     ],
     extras_require={
-        "dev": ["pytest>=8.0.0", "pytest-cov>=6.0.0", "flake8>=7.0.0", "black>=24.0.0"],
+        "dev": [
+            "pytest>=8.0.0",
+            "pytest-cov>=6.0.0",
+            "pytest-asyncio>=0.25.0",
+            "flake8>=7.0.0",
+            "black>=24.0.0",
+        ],
     },
     entry_points={
         "console_scripts": [
