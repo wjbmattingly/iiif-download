@@ -75,10 +75,10 @@ class IIIFImage:
         try:
             async with async_request(url) as res:
                 if not res.ok:
-                    logger.error(f"Failed to download {url}: status {res.status}")
-                    if res.status == 404:
+                    if res.status == 404 and url != self.url:
                         # try one last time without coord/size/rot/default.jpg
                         return await self.download(self.url)
+                    logger.error(f"Failed to download {url}: status {res.status}")
                     return False
                 return await self.process_response(res)
 
