@@ -90,8 +90,8 @@ class TestManifest:
     #     return mock_manifest
 
     @pytest.mark.asyncio
-    async def test_manifest_load(self, mock_manifest):
-        manifest = mock_manifest("manifest_v2.json")
+    async def test_manifest_load(self, mock_manifest, manifest_files):
+        manifest = mock_manifest(manifest_files["v2"])
         assert await manifest.load() is True
 
         # Test avec une URL invalide

@@ -77,6 +77,7 @@ class IIIFImage:
                 if not res.ok:
                     if res.status == 404 and url != self.url:
                         # try one last time without coord/size/rot/default.jpg
+                        # if institution does not implement Image API and only serves static images
                         return await self.download(self.url)
                     logger.error(f"Failed to download {url}: status {res.status}")
                     return False
