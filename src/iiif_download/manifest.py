@@ -1,4 +1,5 @@
 import asyncio
+import gc
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
@@ -48,6 +49,9 @@ class IIIFManifest:
         self.content: Optional[Dict[str, Any]] = None
         self._save_dir: Path = self.config.set_path(save_dir, self.config.img_dir)
         self._manifest_info: Dict = {}
+        self._license: Optional[str] = None
+        self._resources: Optional[List] = None
+        self._images: Optional[List[IIIFImage]] = None
 
     @property
     def save_dir(self) -> Path:
@@ -96,27 +100,44 @@ class IIIFManifest:
 
     @property
     def license(self) -> str:
+        if self._license is None:
+            self._license = self.get_license()
+        return self._license
+
+    def get_license(self) -> str:
         """Get license information from manifest."""
-        # TODO save licence once retrieved
         if not self.content:
             return "No manifest loaded"
 
         for label in ["license", "rights"]:
-            if label in self.content:
-                lic = self.content.get(label)
+            if lic := self.content.get(label):
                 return get_license_url(mono_val(lic))
 
-        if "metadata" in self.content:
-            for label in LICENSE:
-                for meta in self.content.get("metadata", []):
-                    if label in str(meta.get("label", "")).lower():
+        if metadata := self.content.get("metadata"):
+            for meta in metadata:
+                if meta_label := str(meta.get("label", "")).lower():
+                    if any(term in meta_label for term in LICENSE):
                         return get_license_url(meta.get("value", ""))
 
+                for label in LICENSE:
                     if value := get_meta_value(meta, label):
                         return get_license_url(value)
 
-        attribution = self.content.get("attribution", "")
-        return get_license_url(mono_val(attribution))
+        return get_license_url(mono_val(self.content.get("attribution", "")))
+
+    @staticmethod
+    def get_image_resource(image_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Extract image resource from image data."""
+        try:
+            return image_data.get("resource") or image_data.get("body")
+        except KeyError:
+            return None
+
+    @property
+    def resources(self) -> List:
+        if self._resources is None:
+            self._resources = self.get_resources()
+        return self._resources
 
     def get_resources(self) -> List:
         """Extract all image resources from manifest."""
@@ -147,36 +168,48 @@ class IIIFManifest:
 
         return resources
 
+    @staticmethod
+    def get_img_service(resource):
+        if resource.get("service"):
+            return get_id(resource["service"])
+        img_id = get_id(resource)
+
+        # look for hidden image services
+        if img_id.endswith(("/full/full/0/default.jpg", "/full/max/0/default.jpg")):
+            return img_id.rsplit("/", 4)[0]
+
+        # case were only static images are provided
+        return img_id
+
     # TODO add property canvas
+
+    @property
+    def images(self) -> List:
+        if self._images is None:
+            self._images = self.get_images()
+        return self._images
 
     def get_images(self) -> List[IIIFImage]:
         """Get all images from manifest."""
-        # TODO create property and setter
         images = []
         for i, resource in enumerate(self.get_resources()):
             images.append(
                 IIIFImage(
                     idx=i + 1,
-                    img_id=get_id(resource["service"] if "service" in resource else resource),
+                    img_id=self.get_img_service(resource),
                     resource=resource,
                     save_dir=self.save_dir,
                 )
             )
         return images
 
-    @staticmethod
-    def get_image_resource(image_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Extract image resource from image data."""
-        try:
-            return image_data.get("resource") or image_data.get("body")
-        except KeyError:
-            return None
-
     def save_log(self):
         if self.config.is_logged:
             logger.add_to_json(self.save_dir / "info.json", self._manifest_info)
 
-    def download(self, save_dir: Optional[Union[Path, str]] = None) -> Union[bool, "IIIFManifest"]:
+    def download(
+        self, save_dir: Optional[Union[Path, str]] = None, cleanup=False
+    ) -> Union[bool, "IIIFManifest"]:
         if save_dir:
             self.save_dir = save_dir
         if not self.save_dir.exists():
@@ -194,7 +227,7 @@ class IIIFManifest:
             if self.config.is_logged:
                 self._manifest_info["license"] = self.license
 
-            images = self.get_images()
+            images = self.images
             if not images:
                 logger.warning(f"No images found in manifest {self.url}")
                 self.save_log()
@@ -216,4 +249,19 @@ class IIIFManifest:
             self.save_log()
             return self
 
-        return asyncio.run(_async_download_manifest())
+        try:
+            result = asyncio.run(_async_download_manifest())
+        finally:
+            if cleanup:
+                self.cleanup()
+        return result
+
+    def cleanup(self):
+        self.content = None
+        self._resources = None
+        self._manifest_info = None
+        if self._images:
+            for img in self._images:
+                img.cleanup()
+            self._images = None
+        gc.collect()

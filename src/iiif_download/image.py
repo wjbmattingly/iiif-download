@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 from pathlib import Path
@@ -179,3 +180,7 @@ class IIIFImage:
 
         # Append to failed downloads the image
         logger.log_failed_download(self.img_path, self.sized_url())
+
+    def cleanup(self) -> None:
+        self.resource = None
+        gc.collect()

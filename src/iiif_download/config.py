@@ -110,7 +110,6 @@ class Config:
         child_dir = path if path.is_absolute() else parent_dir / path
         child_dir.mkdir(parents=True, exist_ok=True)
 
-        # logger.magic("set_path", path, child_dir, parent_dir, base_dir, self.base_dir, self._base_dir)
         return child_dir
 
     @property

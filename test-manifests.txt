@@ -1,4 +1,5 @@
 https://nubis.bis-sorbonne.fr/iiif/3/nsf0/manifest
+https://adore.ugent.be/IIIF/manifests/archive.ugent.be%3A9FF2C8E0-79A9-11E5-9523-EF6DD43445F2
 https://adore.ugent.be/IIIF/manifests/archive.ugent.be:7B8203B0-CF86-11E7-888C-AE384C411AA8
 https://adore.ugent.be/IIIF/manifests/archive.ugent.be%253A010C9ED6-94DB-11E3-AFBA-2845D43445F2
 https://www.qdl.qa/en/iiif/81055/vdc_100030968238.0x000001/manifest

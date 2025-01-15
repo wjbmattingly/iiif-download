@@ -38,13 +38,17 @@ def main():
         logger.error("No valid manifest URLs found")
         return 1
 
-    config.img_dir = args.img_dir
+    only_one = len(manifests) == 1
+
+    config.img_dir = args.img_dir or config.img_dir
 
     logger.info(f"Downloading {len(manifests)} manifests inside {config.img_dir}")
 
     for url in logger.progress(manifests, desc="Processing manifests"):
         try:
-            IIIFManifest(url, save_dir=None).download()
+            manifest = IIIFManifest(url)
+            manifest.save_dir = None if only_one else manifest.uid
+            manifest.download(cleanup=not only_one)
         except Exception as e:
             logger.error(f"Failed to process {url}", exception=e)
 

@@ -13,7 +13,7 @@ pip install iiif-download
 
 ## Basic usage
 
-The configuration is stored in `iiif_download/config.py` and can be overriden by setting environment variables.
+The configuration is stored in `iiif_download/config.py` and can be overridden by setting environment variables.
 
 ### Inside a script
 
@@ -50,6 +50,7 @@ manifest.download(save_dir="dir_name")
 # override specific variables
 export IIIF_IMG_DIR=custom/path/to/images
 export IIIF_MAX_SIZE=4000
+export IIIF_DEBUG=True
 # or use .env
 source .env
 

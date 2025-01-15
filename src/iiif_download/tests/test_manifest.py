@@ -17,7 +17,7 @@ class TestManifest:
     def test_image_extraction(self, version, mock_manifest, manifest_files):
         """Test image extraction from manifest."""
         manifest = mock_manifest(manifest_files[version])
-        images = manifest.get_images()
+        images = manifest.images
 
         assert len(images) == 1
         image = images[0]
@@ -59,7 +59,7 @@ class TestManifest:
         """Test error handling for malformed manifests."""
         manifest = IIIFManifest("https://example.org/manifest")
         manifest.content = manifest_content
-        assert manifest.get_resources() == expected_resources
+        assert manifest.resources == expected_resources
 
     @pytest.mark.parametrize(
         "manifest_content,expected_license",
@@ -159,14 +159,14 @@ class TestManifest:
 #         mock.return_value = manifest
 #
 #         # Mock image save to always succeed
-#         for image in manifest.get_images():
+#         for image in manifest.images:
 #             image.save = Mock(return_value=True)
 #
 #         downloader.download_manifest("https://example.org/manifest")
 #
 #         # Verify number of downloads matches manifest
 #         downloaded_images = list((TEMP_DIR / "example.org").glob("*.jpg"))
-#         assert len(downloaded_images) == len(manifest.get_images())
+#         assert len(downloaded_images) == len(manifest.images)
 #
 # def test_failed_download_logging(self, manifest_files, mock_manifest):
 #     """Test that failed downloads are logged in info.txt."""
@@ -177,7 +177,7 @@ class TestManifest:
 #         mock.return_value = manifest
 #
 #         # Make image save fail
-#         for image in manifest.get_images():
+#         for image in manifest.images:
 #             image.save = Mock(return_value=False)
 #             image.sized_url = Mock(return_value="https://example.org/iiif/image1/full/2000,/0/default.jpg")
 #
