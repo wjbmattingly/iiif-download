@@ -1,3 +1,4 @@
+# MANIFESTS EXPECTED TO WORK
 https://nubis.bis-sorbonne.fr/iiif/3/nsf0/manifest
 https://adore.ugent.be/IIIF/manifests/archive.ugent.be%3A9FF2C8E0-79A9-11E5-9523-EF6DD43445F2
 https://adore.ugent.be/IIIF/manifests/archive.ugent.be:7B8203B0-CF86-11E7-888C-AE384C411AA8
@@ -31,5 +32,6 @@ https://cdm16003.contentdm.oclc.org/iiif/2/p15150coll7:10585/manifest.json
 https://gallica.bnf.fr/iiif/ark:/12148/btv1b11002469m/manifest.json
 https://rara.biblhertz.it/Ca-MAR125-2850-iiif
 
+# MANIFESTS EXPECTED TO FAIL
 https://api.bl.uk/metadata/iiif/ark:/81055/vdc_100162804369.0x000001/manifest.json
 https://iiif.archivelab.org/iiif/b30413163_0003/manifest.json

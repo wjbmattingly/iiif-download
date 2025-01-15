@@ -25,7 +25,9 @@ def main():
     if args.file:
         try:
             with open(args.file) as f:
-                manifests.extend(line.strip() for line in f if line.strip())
+                manifests.extend(
+                    line.strip() for line in f if line.strip() and not line.strip().startswith("#")
+                )
         except Exception as e:
             logger.error(f"Failed to read file {args.file}", exception=e)
             return 1
@@ -39,7 +41,6 @@ def main():
         return 1
 
     only_one = len(manifests) == 1
-
     config.img_dir = args.img_dir or config.img_dir
 
     logger.info(f"Downloading {len(manifests)} manifests inside {config.img_dir}")

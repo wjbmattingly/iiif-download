@@ -1,3 +1,4 @@
+import json
 import re
 from contextlib import asynccontextmanager
 from html import unescape
@@ -6,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import aiofiles
-from aiohttp import ClientResponse, ClientSession, ClientSSLError, ClientTimeout
+from aiohttp import ClientResponse, ClientSession, ClientSSLError, ClientTimeout, ContentTypeError
 
 from ..config import config
 
@@ -45,18 +46,25 @@ async def get_json_async(url: str, allow_insecure: bool = False) -> Dict[str, An
 
     Returns: Parsed JSON content
     """
+
+    async def parse_response(res: ClientResponse) -> Dict[str, Any]:
+        try:
+            return await res.json()
+        except ContentTypeError:
+            try:
+                return json.loads(await res.text())
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Content could not be parsed as JSON: {str(e)}") from e
+
     try:
         async with async_request(url) as response:
-            return await response.json()
+            return await parse_response(response)
     except ClientSSLError as ssl_error:
         if not allow_insecure:
             raise ssl_error
         # Fallback to insecure connection
-        async with async_request(
-            url,
-            ssl=False,
-        ) as response:
-            return await response.json()
+        async with async_request(url, ssl=False) as response:
+            return await parse_response(response)
 
 
 @asynccontextmanager
