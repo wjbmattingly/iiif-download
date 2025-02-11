@@ -106,6 +106,7 @@ class Config:
             return parent_dir
         if not isinstance(path, (str, Path)):
             raise TypeError("path must be Path or string")
+
         path = Path(path)
         child_dir = path if path.is_absolute() else parent_dir / path
         child_dir.mkdir(parents=True, exist_ok=True)

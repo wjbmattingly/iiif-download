@@ -68,5 +68,5 @@ manifest = IIIFManifest("https://example.org/manifest")
 manifest.load()
 lic = manifest.license
 author = manifest.get_meta("author")
-images = manifest.get_images()
+images = manifest.images
 ```
