@@ -35,7 +35,13 @@ class IIIFManifest:
     """Represents a IIIF manifest with its metadata and image list."""
 
     def __init__(
-        self, url: str, save_dir: Optional[Union[Path, str]] = None, conf: Config = config, **kwargs
+        self,
+        url: str,
+        save_dir: Optional[Union[Path, str]] = None,
+        prefix: str = "",
+        leading_zeros: int = 4,
+        conf: Config = config,
+        **kwargs,
     ):
         self.config = conf
 
@@ -47,6 +53,8 @@ class IIIFManifest:
 
         self.url = unquote(url)
         self.content: Optional[Dict[str, Any]] = None
+        self._prefix = prefix
+        self._leading_zeros = leading_zeros
         self._save_dir: Path = self.config.set_path(save_dir, self.config.img_dir)
         self._manifest_info: Dict = {}
         self._license: Optional[str] = None
@@ -126,7 +134,7 @@ class IIIFManifest:
         return get_license_url(mono_val(self.content.get("attribution", "")))
 
     @staticmethod
-    def get_image_resource(image_data: Dict[str, Any], label:str="") -> Optional[Dict[str, Any]]:
+    def get_image_resource(image_data: Dict[str, Any], label: str = "") -> Optional[Dict[str, Any]]:
         """Extract image resource from image data."""
         try:
             resource = image_data.get("resource") or image_data.get("body")
@@ -203,6 +211,8 @@ class IIIFManifest:
                     img_id=self.get_img_service(resource),
                     resource=resource,
                     save_dir=self.save_dir,
+                    prefix=self._prefix,
+                    leading_zeros=self._leading_zeros,
                 )
             )
         return images

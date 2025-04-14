@@ -20,6 +20,8 @@ class IIIFImage:
         img_id: str,
         resource: Dict[str, Any],
         save_dir: Path,
+        prefix: str = "",
+        leading_zeros: int = 4,
         max_dim: Optional[int] = None,
         min_dim: Optional[int] = None,
     ):
@@ -27,8 +29,7 @@ class IIIFImage:
         self.url = sanitize_url(img_id.replace("full/full/0/default.jpg", ""))
 
         self.resource = resource
-        # TODO add possibility for custom prefix
-        self.img_name = f"{self.idx:04d}.jpg"
+        self.img_name = f"{prefix}{format(self.idx, f'0{leading_zeros}d')}.jpg"
         self.save_dir = save_dir
 
         self.max_dim = max_dim or config.max_size
