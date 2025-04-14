@@ -9,6 +9,6 @@ from .config import Config, config
 from .image import IIIFImage
 from .manifest import IIIFManifest
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 __all__ = ["IIIFManifest", "IIIFImage", "config", "Config"]
