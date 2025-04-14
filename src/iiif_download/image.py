@@ -75,7 +75,7 @@ class IIIFImage:
         time.sleep(self.sleep)
 
         try:
-            async with async_request(url) as res:
+            async with async_request(url, allow_insecure=True) as res:
                 if not res.ok:
                     if res.status == 404 and url != self.url:
                         # try one last time without coord/size/rot/default.jpg

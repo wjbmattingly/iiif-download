@@ -73,6 +73,7 @@ async def async_request(
     method: str = "GET",
     headers: Optional[Dict[str, str]] = None,
     timeout: Optional[int] = None,
+    allow_insecure: bool = False,
     **kwargs,
 ) -> ClientResponse:
     """
@@ -83,6 +84,7 @@ async def async_request(
         method: HTTP method (default: "GET")
         headers: Optional dictionary of headers
         timeout: Optional timeout in seconds (default: from config)
+        allow_insecure: If True, allows fallback to insecure connection on SSL errors
         **kwargs: Additional arguments to pass to session.request
 
     Usage:
@@ -101,9 +103,23 @@ async def async_request(
         request_headers.update(headers)
 
     timeout_value = timeout or config.timeout
-    async with ClientSession(trust_env=True, timeout=ClientTimeout(total=timeout_value)) as session:
-        async with session.request(method, url, headers=request_headers, proxy=proxy, **kwargs) as response:
-            yield response
+
+    try:
+        async with ClientSession(trust_env=True, timeout=ClientTimeout(total=timeout_value)) as session:
+            async with session.request(
+                method, url, headers=request_headers, proxy=proxy, **kwargs
+            ) as response:
+                yield response
+    except ClientSSLError as ssl_error:
+        if not allow_insecure:
+            raise ssl_error
+
+        ssl_kwargs = {**kwargs, "ssl": False}
+        async with ClientSession(trust_env=True, timeout=ClientTimeout(total=timeout_value)) as session:
+            async with session.request(
+                method, url, headers=request_headers, proxy=proxy, **ssl_kwargs
+            ) as response:
+                yield response
 
 
 def get_id(dic):
