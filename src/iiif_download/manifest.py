@@ -88,6 +88,7 @@ class IIIFManifest:
             return bool(self.content)
         except Exception as e:
             logger.error(f"Failed to load manifest from {self.url}", exception=e)
+            logger.log_failed_manifests(self.url)
             return False
 
     def get_meta(self, label: str) -> Optional[str]:

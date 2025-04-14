@@ -229,6 +229,16 @@ class Logger:
         with open(self.download_log, "a") as f:
             f.write(f"{img_path} {img_url}\n")
 
+    def log_failed_manifests(self, manifest_url: str):
+        """
+        Log a failed manifest download attempt
+
+        Args:
+            manifest_url: URL of the manifest that failed to be downloaded
+        """
+        with open(self.download_log, "a") as f:
+            f.write(f"{manifest_url}\n")
+
     @staticmethod
     def add_to_json(log_file, content, mode="w"):
         """Add a message to the log file."""

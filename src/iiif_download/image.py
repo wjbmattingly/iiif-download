@@ -81,12 +81,12 @@ class IIIFImage:
                         # try one last time without coord/size/rot/default.jpg
                         # if institution does not implement Image API and only serves static images
                         return await self.download(self.url)
-                    logger.error(f"Failed to download {url}: status {res.status}")
+                    self.download_fail(f"⛔️ Failed to download {url}: status {res.status}")
                     return False
                 return await self.process_response(res)
 
         except Exception as e:
-            logger.error(f"Failed to download {url}", exception=e)
+            self.download_fail(f"⛔️ Failed to download {url}", exc=e)
             return False
 
     async def process_response(self, response) -> bool:
